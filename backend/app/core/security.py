@@ -26,14 +26,14 @@ def create_access_token(data: str|uuid.UUID, extra_claims: Optional[Union[str,An
     return jwt.encode(to_encode,setting.SECRET_KEY,setting.ALGORITHM)
 
 def create_referesh_token(data: str|uuid.UUID)->str:
-    expire = datetime.now(timezone.utc) + timedelta(minutes=setting.ACCESS_TOKEN_EXPIRY_TIME_FOR_REFERESH_TOKEN)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=setting.REFERESH_EXPIRY_TIME)
     to_encode = {
         "sub":str(data),
         "exp":expire,
         "type":"refresh",
         "iat":datetime.now(timezone.utc)
     }
-    return jwt.encode(to_encode,setting.REFERESH_SECRET_KEY,setting.ACCESS_TOKEN_EXPIRY_TIME_FOR_REFERESH_TOKEN)
+    return jwt.encode(to_encode,setting.REFERESH_SECRET_KEY,setting.REFERESH_EXPIRY_TIME)
 
 def decode_token(token: str, is_refresh: bool = False)->Optional[Dict[str, Any]]:
     key = setting.REFERESH_SECRET_KEY if is_refresh else setting.SECRET_KEY

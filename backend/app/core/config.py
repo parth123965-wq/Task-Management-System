@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     REFERESH_SECRET_KEY: str
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRY_TIME: str
-    ACCESS_TOKEN_EXPIRY_TIME_FOR_REFERESH_TOKEN: str
+    REFERESH_EXPIRY_TIME: str
     
     model_config = SettingsConfigDict(
         env_file=".env",

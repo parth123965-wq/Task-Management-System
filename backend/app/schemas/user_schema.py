@@ -1,5 +1,5 @@
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
-from app.model.user import UserRole
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
+from app.model.user_model import UserRole
 import uuid
 from datetime import datetime
 from typing import Optional
@@ -54,3 +54,16 @@ class TokenResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
+    
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str = Field(..., min_length=8, max_length=128)
+    
+class ChangeEmail(BaseModel):
+    current_email: EmailStr = Field(..., description="User's existing email address")
+    new_email: EmailStr = Field(..., description="The new email address to set")
+    @model_validator(mode="after")
+    def check_emails_differ(self) -> "ChangeEmail":
+        if self.current_email.lower() == self.new_email.lower():
+            raise ValueError("New email must be different from current email.")
+        return self
