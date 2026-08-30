@@ -33,7 +33,7 @@ def create_referesh_token(data: str|uuid.UUID)->str:
         "type":"refresh",
         "iat":datetime.now(timezone.utc)
     }
-    return jwt.encode(to_encode,setting.REFERESH_SECRET_KEY,setting.REFERESH_EXPIRY_TIME)
+    return jwt.encode(to_encode,setting.REFERESH_SECRET_KEY,algorithm=setting.ALGORITHM)
 
 def decode_token(token: str, is_refresh: bool = False)->Optional[Dict[str, Any]]:
     key = setting.REFERESH_SECRET_KEY if is_refresh else setting.SECRET_KEY

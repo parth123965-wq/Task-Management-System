@@ -1,13 +1,13 @@
 from app.repository.user_repository import UserRepository
-from app.core.security import create_access_token, create_referesh_token, varify_password, hash_password, decode_token
+from app.core.security import create_access_token, create_referesh_token, varify_password, hash_password
 from app.schemas.user_schema import UserCreate, UserLogin, UserUpdate, ChangePasswordRequest, ChangeEmail
 from fastapi import HTTPException, status
 from app.model.user_model import User
 import uuid
 
 class UserService:
-    def __init__(self):
-        self.user_repo = UserRepository()
+    def __init__(self, user_repo: UserRepository):
+        self.user_repo = user_repo
         
     async def register_user(self, data: UserCreate)->User:
         if await self.user_repo.get_by_email(email=data.email):
@@ -35,9 +35,8 @@ class UserService:
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid Cradincials"
             )
-        payload = {"sub":str(user.id)}
-        access_token = create_access_token(payload)
-        referesh_token = create_referesh_token(payload)
+        access_token = create_access_token(user.id)
+        referesh_token = create_referesh_token(user.id)
         return access_token, referesh_token
     
     async def user_profile_update(self, update_data: UserUpdate, user_id: uuid.UUID)->User:

@@ -3,14 +3,13 @@ from app.model.user_model import UserRole
 import uuid
 from datetime import datetime
 from typing import Optional
-from enum import Enum
 
 class UserBase(BaseModel):
     username: str = Field(
         ..., 
         min_length=3, 
         max_length=50, 
-        pattern=r"^[a-zA-Z0-9_-]+$",
+        pattern=r"^[a-zA-Z0-9_.-]+$",
         description="Alphanumeric, underscores, and hyphens only"
     )
     email: EmailStr

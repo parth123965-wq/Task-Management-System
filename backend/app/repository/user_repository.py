@@ -11,15 +11,16 @@ class UserRepository:
         
     async def create(self, user: User) -> User:
         self.session.add(user)
+        await self.session.commit()
         await self.session.flush()
-        await self.session.refresh()
+        await self.session.refresh(user)
         return user
     
     async def update(self, db_user: User, data: Dict[str,Any])->User:
         for field, value in data.items():
             setattr(db_user,field,value)
         await self.session.flush()
-        await self.session.refresh()
+        await self.session.refresh(db_user)
         return db_user
     
     async def soft_delete(self, user_id: uuid.UUID) -> bool:
