@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     COOKIE_SECURE: bool = False
     COOKIE_SAMESITE: str = "lax"
     COOKIE_HTTPONLY: bool = True
+    MAX_FILE_SIZE_BYTES: int
+    UPLOAD_DIR: str
+    AVAITAR_S: str
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -24,5 +27,8 @@ class Settings(BaseSettings):
             "samesite": self.COOKIE_SAMESITE,
             "secure": self.COOKIE_SECURE,
         }
+    @property
+    def ALLOWED_IMAGE_TYPES(self)->dict:
+        return {"image/jpeg", "image/png", "image/webp"}
     
 setting = Settings()

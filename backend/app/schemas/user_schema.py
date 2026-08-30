@@ -35,7 +35,6 @@ class UserLogin(BaseModel):
     
 class UserUpdate(BaseModel):
     username: Optional[str] = Field(None, min_length=3, max_length=50, pattern=r"^[a-zA-Z0-9_-]+$")
-    avatar_url: Optional[str] = Field(None, max_length=1024)
     
 class UserResponse(UserBase):
     id: uuid.UUID

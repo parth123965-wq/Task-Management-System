@@ -1,9 +1,12 @@
 from app.repository.user_repository import UserRepository
 from app.core.security import create_access_token, create_referesh_token, varify_password, hash_password
 from app.schemas.user_schema import UserCreate, UserLogin, UserUpdate, ChangePasswordRequest, ChangeEmail
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, UploadFile
 from app.model.user_model import User
 import uuid
+import aiofiles
+import os
+from app.core.config import setting
 
 class UserService:
     def __init__(self, user_repo: UserRepository):
@@ -39,21 +42,30 @@ class UserService:
         referesh_token = create_referesh_token(user.id)
         return access_token, referesh_token
     
-    async def user_profile_update(self, update_data: UserUpdate, user_id: uuid.UUID)->User:
+    async def change_username(self, update_data: UserUpdate, user_id: uuid.UUID)->User:
         user = await self.user_repo.get_by_id(user_id)
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="That user is Not found."
             )
-        if update_data.username and update_data.username!=user.username:
-            existing = await self.user_repo.get_by_username(update_data.username)
-            if existing:
-                raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail="That Username is alreay taken."
-                )
         update_dict = update_data.model_dump(exclude_unset=True)
+        if not update_dict:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No fields provided to update."
+            )
+        if "username" in update_dict and update_dict["username"]:
+            clean_username = update_dict["username"].strip()
+            update_dict["username"] = clean_username
+
+            if clean_username.lower() != user.username.lower():
+                existing = await self.user_repo.get_by_username(clean_username)
+                if existing and existing.id != user.id:
+                    raise HTTPException(
+                        status_code=status.HTTP_409_CONFLICT,
+                        detail="That username is already taken."
+                    )
         return await self.user_repo.update(user,update_dict)
     
     async def change_password(self, data: ChangePasswordRequest, user_id: uuid.UUID)->User:
@@ -77,7 +89,7 @@ class UserService:
         result = await self.user_repo.update(user,updated)
         return result
     
-    async def change_email(self, data: ChangeEmail, user_id: uuid.UUID):
+    async def change_email(self, data: ChangeEmail, user_id: uuid.UUID)->User:
         user = await self.user_repo.get_by_id(user_id)
         if not user:
             raise HTTPException(
@@ -98,3 +110,31 @@ class UserService:
         updated = {"email":data.new_email}
         result = await self.user_repo.update(user,updated)
         return result
+    
+    async def change_avaitar(self, avaitar: UploadFile, user: User):
+        if avaitar.content_type not in setting.ALLOWED_IMAGE_TYPES:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="file type not match."
+            )
+        content = await avaitar.read()
+        if len(content) > setting.MAX_FILE_SIZE_BYTES:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="The Image size is too large."
+            )
+        os.makedirs(setting.AVAITAR_S,exist_ok=True)
+        file_extension = avaitar.filename.split(".")[-1].lower() if avaitar.filename else "jpg"
+        unique_filename = f"user_{user.id}_{uuid.uuid4().hex[:8]}.{file_extension}"
+        file_path = os.path.join(setting.AVAITAR_S, unique_filename)
+        async with aiofiles.open(file_path,"wb")as f:
+            await f.write(content)
+        if user.avatar_url:
+            exists = user.avatar_url.strip('/')
+            if os.path.exists(exists):
+                try:
+                    os.remove(exists)
+                except OSError:
+                    pass
+        avaitar_url = f"{setting.AVAITAR_S}/{unique_filename}"
+        return await self.user_repo.update(user,{"avatar_url":avaitar_url})
