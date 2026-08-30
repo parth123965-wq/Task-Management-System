@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     COOKIE_SECURE: bool = False
     COOKIE_SAMESITE: str = "lax"
     COOKIE_HTTPONLY: bool = True
-    MAX_FILE_SIZE_BYTES: int
+    MAX_FILE_SIZE_BYTES: int = 5 * 1024 * 1024
     UPLOAD_DIR: str
     AVAITAR_S: str
     model_config = SettingsConfigDict(

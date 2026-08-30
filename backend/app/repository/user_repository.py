@@ -19,6 +19,7 @@ class UserRepository:
     async def update(self, db_user: User, data: Dict[str,Any])->User:
         for field, value in data.items():
             setattr(db_user,field,value)
+        await self.session.commit()
         await self.session.flush()
         await self.session.refresh(db_user)
         return db_user

@@ -1,7 +1,7 @@
-from fastapi import Depends, APIRouter, Request, Response
+from fastapi import Depends, APIRouter, Request, Response, UploadFile
 from app.service.user_service import UserService
 from app.dependancys.user_depend import get_current_user
-from app.schemas.user_schema import UserCreate, UserResponse, UserLogin
+from app.schemas.user_schema import UserCreate, UserResponse, UserLogin, UserUpdate, ChangePasswordRequest, ChangeEmail
 from app.dependancys.user_depend import get_user_service
 from app.core.config import setting
 from app.model.user_model import User
@@ -63,3 +63,39 @@ async def logout(
     )
 
     return {"message": "Logged out successfully"}
+
+@user_router.post('/change-username',response_model=UserResponse)
+async def change_username(
+    username: UserUpdate,
+    user: User = Depends(get_current_user),
+    service: UserService = Depends(get_user_service)
+)->UserResponse:
+    result = await service.change_username(username,user.id)
+    return result
+
+@user_router.post('/change-password',response_model=UserResponse)
+async def change_password(
+    userpassword: ChangePasswordRequest,
+    user: User = Depends(get_current_user),
+    service: UserService = Depends(get_user_service)
+)->UserResponse:
+    result = await service.change_password(userpassword,user.id)
+    return result
+
+@user_router.post('/change-email',response_model=UserResponse)
+async def change_email(
+    user_email: ChangeEmail,
+    user: User = Depends(get_current_user),
+    service: UserService = Depends(get_user_service)
+)->UserResponse:
+    result = await service.change_email(user_email,user.id)
+    return result
+
+@user_router.post('/change-avaitar',response_model=UserResponse)
+async def change_avaitar(
+    avaitar: UploadFile,
+    user: User = Depends(get_current_user),
+    service: UserService = Depends(get_user_service)
+)->UserResponse:
+    result = await service.change_avaitar(avaitar,user)
+    return result
