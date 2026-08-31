@@ -1,4 +1,4 @@
-from app.database.database import get_db
+from app.core.database import get_db
 import uuid
 from typing import Optional
 from fastapi import Depends, HTTPException, Request, status

@@ -1,4 +1,4 @@
-from app.database.database import Base
+from app.core.database import Base
 import uuid
 from typing import Optional
 from datetime import datetime
