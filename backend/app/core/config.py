@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     MAX_FILE_SIZE_BYTES: int = 5 * 1024 * 1024
     UPLOAD_DIR: str
     AVAITAR_S: str
+    prefix: str
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

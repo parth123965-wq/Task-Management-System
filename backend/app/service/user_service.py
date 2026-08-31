@@ -4,13 +4,11 @@ from app.schemas.user_schema import UserCreate, UserLogin, UserUpdate, ChangePas
 from fastapi import HTTPException, status, UploadFile
 from app.model.user_model import User
 import uuid
-import aiofiles
-import os
-from app.core.config import setting
-
+from backend.app.service.avaitar_storage_service import AvaitarStorageService
 class UserService:
-    def __init__(self, user_repo: UserRepository):
+    def __init__(self, user_repo: UserRepository, avaitar_storage: AvaitarStorageService):
         self.user_repo = user_repo
+        self.avaitar_storage = avaitar_storage
         
     async def register_user(self, data: UserCreate)->User:
         if await self.user_repo.get_by_email(email=data.email):
@@ -118,41 +116,12 @@ class UserService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="That User is not Found."
             )
-        if avaitar.content_type not in setting.ALLOWED_IMAGE_TYPES:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Unsupported file type '{avaitar.content_type}'. Allowed types: {', '.join(setting.ALLOWED_IMAGE_TYPES)}."
-            )
-        if avaitar.size and avaitar.size > setting.MAX_FILE_SIZE_BYTES:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"File size exceeds maximum limit of {setting.MAX_FILE_SIZE_BYTES // (1024 * 1024)} MB."
-            )
-        content = await avaitar.read()
-        if len(content) > setting.MAX_FILE_SIZE_BYTES:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"File size exceeds maximum limit of {setting.MAX_FILE_SIZE_BYTES // (1024 * 1024)} MB."
-            )
-        os.makedirs(setting.AVAITAR_S,exist_ok=True)
-        file_extension = setting.MIME_TO_EXT.get(avaitar.content_type)
-        unique_filename = f"user_{user.id}_{uuid.uuid4().hex[:8]}.{file_extension}"
-        file_path = os.path.join(setting.AVAITAR_S, unique_filename)
-        async with aiofiles.open(file_path,"wb")as f:
-            await f.write(content)
-        new_avaitar_url = f"/{setting.AVAITAR_S.strip('/')}/{unique_filename}"
+        file_path, new_avaitar_url = await self.avaitar_storage.save_avaitar(file=avaitar,user_id=user_id)
         old_avaitar_url = user.avatar_url
         try:
-            updated_user = await self.user_repo.update(user,{"avatar_url":new_avaitar_url})
-            if old_avaitar_url:
-                exists = old_avaitar_url.lstrip("/")
-                if os.path.exists(exists) and os.path.isfile(exists):
-                    try:
-                        os.remove(exists)
-                    except OSError:
-                        pass
+            updated_user = await self.user_repo.update(user, {"avatar_url": new_avaitar_url})
+            self.avaitar_storage.delete_avaitar(old_avaitar_url=old_avaitar_url)
+            return updated_user
         except Exception:
-            if os.path.exists(file_path):
-                os.remove(file_path)
+            self.avaitar_storage.delete_avaitar(old_avaitar_url=file_path)
             raise
-        return updated_user
