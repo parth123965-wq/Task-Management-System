@@ -31,4 +31,8 @@ class Settings(BaseSettings):
     def ALLOWED_IMAGE_TYPES(self)->dict:
         return {"image/jpeg", "image/png", "image/webp"}
     
+    @property
+    def MIME_TO_EXT(self)->dict:
+        return {"image/jpeg":"jpeg", "image/png":"png", "image/webp":"webp"}
+    
 setting = Settings()

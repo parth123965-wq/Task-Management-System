@@ -111,30 +111,48 @@ class UserService:
         result = await self.user_repo.update(user,updated)
         return result
     
-    async def change_avaitar(self, avaitar: UploadFile, user: User):
+    async def change_avaitar(self, avaitar: UploadFile, user_id: uuid.UUID):
+        user = await self.user_repo.get_by_id(user_id)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="That User is not Found."
+            )
         if avaitar.content_type not in setting.ALLOWED_IMAGE_TYPES:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="file type not match."
+                detail=f"Unsupported file type '{avaitar.content_type}'. Allowed types: {', '.join(setting.ALLOWED_IMAGE_TYPES)}."
+            )
+        if avaitar.size and avaitar.size > setting.MAX_FILE_SIZE_BYTES:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"File size exceeds maximum limit of {setting.MAX_FILE_SIZE_BYTES // (1024 * 1024)} MB."
             )
         content = await avaitar.read()
         if len(content) > setting.MAX_FILE_SIZE_BYTES:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="The Image size is too large."
+                detail=f"File size exceeds maximum limit of {setting.MAX_FILE_SIZE_BYTES // (1024 * 1024)} MB."
             )
         os.makedirs(setting.AVAITAR_S,exist_ok=True)
-        file_extension = avaitar.filename.split(".")[-1].lower() if avaitar.filename else "jpg"
+        file_extension = setting.MIME_TO_EXT.get(avaitar.content_type)
         unique_filename = f"user_{user.id}_{uuid.uuid4().hex[:8]}.{file_extension}"
         file_path = os.path.join(setting.AVAITAR_S, unique_filename)
         async with aiofiles.open(file_path,"wb")as f:
             await f.write(content)
-        if user.avatar_url:
-            exists = user.avatar_url.strip('/')
-            if os.path.exists(exists):
-                try:
-                    os.remove(exists)
-                except OSError:
-                    pass
-        avaitar_url = f"{setting.AVAITAR_S}/{unique_filename}"
-        return await self.user_repo.update(user,{"avatar_url":avaitar_url})
+        new_avaitar_url = f"/{setting.AVAITAR_S.strip('/')}/{unique_filename}"
+        old_avaitar_url = user.avatar_url
+        try:
+            updated_user = await self.user_repo.update(user,{"avatar_url":new_avaitar_url})
+            if old_avaitar_url:
+                exists = old_avaitar_url.lstrip("/")
+                if os.path.exists(exists) and os.path.isfile(exists):
+                    try:
+                        os.remove(exists)
+                    except OSError:
+                        pass
+        except Exception:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            raise
+        return updated_user

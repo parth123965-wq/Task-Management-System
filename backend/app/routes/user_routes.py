@@ -97,5 +97,5 @@ async def change_avaitar(
     user: User = Depends(get_current_user),
     service: UserService = Depends(get_user_service)
 )->UserResponse:
-    result = await service.change_avaitar(avaitar,user)
+    result = await service.change_avaitar(avaitar,user.id)
     return result
