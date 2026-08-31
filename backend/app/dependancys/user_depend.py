@@ -7,6 +7,10 @@ from app.model.user_model import User
 from app.repository.user_repository import UserRepository
 from app.core.security import decode_token
 from app.service.user_service import UserService
+from app.service.avaitar_storage_service import AvaitarStorageService
+
+def get_avaitar_service(avaitar_service: AvaitarStorageService = Depends(AvaitarStorageService)):
+    return avaitar_service
 
 def get_user_repo(db: AsyncSession = Depends(get_db)) -> UserRepository:
     return UserRepository(sesion=db)
@@ -51,6 +55,7 @@ async def get_current_user(request: Request, user_repo: UserRepository = Depends
     return user
 
 def get_user_service(
-    user_repo: UserRepository = Depends(get_user_repo)
+    user_repo: UserRepository = Depends(get_user_repo),
+    avaitar_service: AvaitarStorageService = Depends(get_avaitar_service)
 ) -> UserService:
-    return UserService(user_repo=user_repo)
+    return UserService(user_repo=user_repo,avaitar_storage=avaitar_service)

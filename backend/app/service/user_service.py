@@ -4,7 +4,7 @@ from app.schemas.user_schema import UserCreate, UserLogin, UserUpdate, ChangePas
 from fastapi import HTTPException, status, UploadFile
 from app.model.user_model import User
 import uuid
-from backend.app.service.avaitar_storage_service import AvaitarStorageService
+from app.service.avaitar_storage_service import AvaitarStorageService
 class UserService:
     def __init__(self, user_repo: UserRepository, avaitar_storage: AvaitarStorageService):
         self.user_repo = user_repo
@@ -120,7 +120,7 @@ class UserService:
         old_avaitar_url = user.avatar_url
         try:
             updated_user = await self.user_repo.update(user, {"avatar_url": new_avaitar_url})
-            self.avaitar_storage.delete_avaitar(old_avaitar_url=old_avaitar_url)
+            await self.avaitar_storage.delete_avaitar(old_avaitar_url=old_avaitar_url)
             return updated_user
         except Exception:
             self.avaitar_storage.delete_avaitar(old_avaitar_url=file_path)

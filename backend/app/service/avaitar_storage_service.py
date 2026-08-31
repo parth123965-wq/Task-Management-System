@@ -6,7 +6,7 @@ import aiofiles
 class AvaitarStorageService:
     
     @staticmethod
-    async def save_avaitar(self, file: UploadFile, user_id: uuid.UUID):
+    async def save_avaitar(file: UploadFile, user_id: uuid.UUID):
         if file.content_type not in setting.ALLOWED_IMAGE_TYPES:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -33,7 +33,7 @@ class AvaitarStorageService:
         return file_path, new_avaitar_url
     
     @staticmethod
-    async def delete_avaitar(self, old_avaitar_url: str|None)->None:
+    async def delete_avaitar(old_avaitar_url: str|None)->None:
         if not old_avaitar_url:
             return
 
