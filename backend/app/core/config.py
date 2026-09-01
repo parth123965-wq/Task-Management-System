@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     REDIS_PORT: int 
     REDIS_DB: int
     REDIS_PASSWORD: str
+    OTP_EXPIRY: int
+    OTP_ATTEMPTS: int
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
