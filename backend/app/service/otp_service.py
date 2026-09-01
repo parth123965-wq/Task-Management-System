@@ -11,16 +11,16 @@ class OtpService:
         self.redis = redis
     
     async def otp_key(self, purpose: str, identifier: str)-> str:
-        return f"otp:{purpose}:{identifier.lower().strip()}"
+        return f"otp:{purpose}:{identifier}"
 
     async def otp_attempt(self, purpose: str, identifier: str)-> str:
-        return f"otp_attempts:{purpose}:{identifier.lower().strip()}"
+        return f"otp_attempts:{purpose}:{identifier}"
     
     async def otp_cooldown(self, purpose: str, identifier: str)-> str:
-            return f"otp_cooldown:{purpose}:{identifier.lower().strip()}"
+            return f"otp_cooldown:{purpose}:{identifier}"
         
     async def otp_data_key(self, purpose: str, identifier: str)-> str:
-        return f"otp_data:{purpose}:{identifier.lower().strip()}"
+        return f"otp_data:{purpose}:{identifier}"
     
     async def otp_generate(self):
         return (randbelow(900000) + 100000)
