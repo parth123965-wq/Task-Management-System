@@ -1,6 +1,8 @@
 from pydantic_settings import BaseSettings , SettingsConfigDict
 from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
+TEMPLATE_DIR: Path = BASE_DIR / "templates" / "emails"
+TEMPLATE_DIR.mkdir(parents=True, exist_ok=True)
 class Settings(BaseSettings):
     APP_VERSION: str
     APP_TITLE: str
@@ -27,14 +29,14 @@ class Settings(BaseSettings):
     MAIL_PASSWORD: str
     MAIL_FROM: str
     MAIL_PORT: int
-    MAIL_FROM_NAME = "Task Management System"
-    MAIL_SERVER = "smtp.google.com"
-    MAIL_STARTTLS = True
-    MAIL_SSL_TSL = False
-    USE_CREDENTIALS = True
-    VALIDATE_CERTS = True
+    MAIL_FROM_NAME: str
+    MAIL_SERVER: str
+    MAIL_STARTTLS: bool
+    MAIL_SSL_TSL: bool
+    USE_CREDENTIALS: bool
+    VALIDATE_CERTS: bool
     
-    TEMPLATE_FOLDER: Path = BASE_DIR / "templates" / "emails"
+    TEMPLATE_FOLDER: Path = TEMPLATE_DIR
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

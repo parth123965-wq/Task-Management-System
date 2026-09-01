@@ -7,8 +7,8 @@ async def init_redis_pool()->None:
     global redis_pool
     redis_pool = ConnectionPool.from_url(
         setting.REDIS_URL,
-        max_connection=20,
-        decode_response=True
+        max_connections=20,
+        decode_responses=True
     )
     
 async def redis_close():

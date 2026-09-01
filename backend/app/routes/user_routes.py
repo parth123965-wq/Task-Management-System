@@ -1,20 +1,31 @@
-from fastapi import Depends, APIRouter, Request, Response, UploadFile
+from fastapi import Depends, APIRouter, Request, Response, UploadFile, BackgroundTasks
 from app.service.user_service import UserService
-from app.dependancys.user_depend import get_current_user
+from app.dependancys.user_depend import get_current_user, get_email_service, get_otp_service
 from app.schemas.user_schema import UserCreate, UserResponse, UserLogin, UserUpdate, ChangePasswordRequest, ChangeEmail
 from app.dependancys.user_depend import get_user_service
 from app.core.config import setting
 from app.model.user_model import User
+from app.service.otp_service import OtpService
+from app.service.email_service import EmailService
 
 user_router = APIRouter(prefix="/users",tags=["Users"])
 
-@user_router.post('/register',response_model=UserResponse)
+@user_router.post('/register')
 async def register(
     user: UserCreate,
-    service: UserService = Depends(get_user_service)
-)->UserResponse:
-    result = await service.register_user(data=user)
-    return result
+    background_task: BackgroundTasks,
+    otp_service: OtpService = Depends(get_otp_service),
+    email_service: EmailService = Depends(get_email_service)
+)->dict:
+    otp = await otp_service.otp_generate_save('registration',user.email,user.model_dump())
+    background_task.add_task(
+        email_service.send_otp_email,
+        to_email=user.email,
+        otp=otp
+    )
+    return {
+        "message":"Otp is Send to Email address."
+    }
 
 @user_router.get('/me',response_model=UserResponse)
 async def me(
