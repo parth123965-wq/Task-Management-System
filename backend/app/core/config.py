@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings , SettingsConfigDict
-
+from pathlib import Path
+BASE_DIR = Path(__file__).resolve().parent.parent
 class Settings(BaseSettings):
     APP_VERSION: str
     APP_TITLE: str
@@ -22,6 +23,18 @@ class Settings(BaseSettings):
     REDIS_PASSWORD: str
     OTP_EXPIRY: int
     OTP_ATTEMPTS: int
+    MAIL_USERNAME: str
+    MAIL_PASSWORD: str
+    MAIL_FROM: str
+    MAIL_PORT: int
+    MAIL_FROM_NAME = "Task Management System"
+    MAIL_SERVER = "smtp.google.com"
+    MAIL_STARTTLS = True
+    MAIL_SSL_TSL = False
+    USE_CREDENTIALS = True
+    VALIDATE_CERTS = True
+    
+    TEMPLATE_FOLDER: Path = BASE_DIR / "templates" / "emails"
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
