@@ -15,7 +15,11 @@ class Settings(BaseSettings):
     MAX_FILE_SIZE_BYTES: int = 5 * 1024 * 1024
     UPLOAD_DIR: str
     AVAITAR_S: str
-    prefix: str
+    PREFIX: str
+    REDIS_HOST: str
+    REDIS_PORT: int 
+    REDIS_DB: int
+    REDIS_PASSWORD: str
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -35,5 +39,11 @@ class Settings(BaseSettings):
     @property
     def MIME_TO_EXT(self)->dict:
         return {"image/jpeg":"jpeg", "image/png":"png", "image/webp":"webp"}
+    
+    @property
+    def REDIS_URL(self) -> str:
+        if self.REDIS_PASSWORD:
+            return f"redis://:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
     
 setting = Settings()

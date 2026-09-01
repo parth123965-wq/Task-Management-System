@@ -25,7 +25,7 @@ class AvaitarStorageService:
             )
         os.makedirs(setting.AVAITAR_S,exist_ok=True)
         file_extension = setting.MIME_TO_EXT.get(file.content_type)
-        unique_filename = f"{setting.prefix}{user_id}_{uuid.uuid4().hex[:8]}.{file_extension}"
+        unique_filename = f"{setting.PREFIX}{user_id}_{uuid.uuid4().hex[:8]}.{file_extension}"
         file_path = os.path.join(setting.AVAITAR_S, unique_filename)
         async with aiofiles.open(file_path,"wb")as f:
             await f.write(content)
