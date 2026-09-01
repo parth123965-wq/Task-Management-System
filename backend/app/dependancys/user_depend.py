@@ -11,6 +11,7 @@ from app.service.avaitar_storage_service import AvaitarStorageService
 from app.core.redis import get_redis
 from app.service.otp_service import OtpService
 from redis.asyncio import Redis
+from app.service.email_service import EmailService
 
 def get_avaitar_service(avaitar_service: AvaitarStorageService = Depends(AvaitarStorageService)):
     return avaitar_service
@@ -67,3 +68,6 @@ def get_otp_service(
     redis: Redis = Depends(get_redis)
 )-> OtpService:
     return OtpService(redis)
+
+def get_email_service()->EmailService:
+    return EmailService()
