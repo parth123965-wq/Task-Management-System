@@ -1,6 +1,8 @@
 from fastapi_mail import FastMail, ConnectionConfig, MessageSchema, MessageType
 from app.core.config import setting
-
+import logging
+from aiosmtplib.errors import SMTPException, SMTPServerDisconnected, SMTPTimeoutError
+logger = logging.getLogger(__name__)
 mail_config = ConnectionConfig(
     MAIL_USERNAME=setting.MAIL_USERNAME,
     MAIL_PASSWORD=setting.MAIL_PASSWORD,
@@ -23,7 +25,7 @@ class EmailService:
         to_email: str,
         otp: int,
         purpose: str = "Varification"
-    )->None:
+    )->bool:
         message = MessageSchema(
             subject=f"Your {purpose} Code: {otp}",
             recipients=[to_email],
@@ -35,4 +37,22 @@ class EmailService:
             },
             subtype=MessageType.html
         )
-        await fast_mail.send_message(message=message,template_name="otp_verification.html")
+        try:
+            await fast_mail.send_message(message=message,template_name="otp_verification.html")
+            logger.info(f"OTP email sent successfully to {to_email}")
+            return True
+        except (SMTPTimeoutError, TimeoutError):
+            logger.error(f"SMTP Timeout: Mail server took too long to respond when sending OTP to {to_email}")
+            return False
+
+        except SMTPServerDisconnected:
+            logger.error(f"SMTP Disconnect: Server dropped connection while sending OTP to {to_email}")
+            return False
+
+        except SMTPException as e:
+            logger.error(f"SMTP Error for {to_email}: {str(e)}")
+            return False
+
+        except Exception as e:
+            logger.error(f"Unexpected error sending OTP to {to_email}: {str(e)}")
+            return False
