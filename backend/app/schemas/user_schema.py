@@ -65,3 +65,7 @@ class ChangeEmail(BaseModel):
         if self.current_email.lower() == self.new_email.lower():
             raise ValueError("New email must be different from current email.")
         return self
+    
+class VerifyRegister(BaseModel):
+    verify_email: EmailStr = Field(..., description="User's Email Address to register use.")
+    otp: int = Field(..., description="Enter Otp to get that email.",ge=100000,le=999999)

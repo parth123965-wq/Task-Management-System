@@ -60,7 +60,7 @@ class OtpService:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Too many invalid attempts. This OTP has been invalidated."
             )
-        if not secrets.compare_digest(stored_otp, otp_value):
+        if not secrets.compare_digest(str(stored_otp), str(otp_value)):
             remaining = setting.OTP_MAX_ATTEMPTS - attempt
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

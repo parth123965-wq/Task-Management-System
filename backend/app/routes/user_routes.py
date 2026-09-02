@@ -1,7 +1,7 @@
 from fastapi import Depends, APIRouter, Request, Response, UploadFile, BackgroundTasks
 from app.service.user_service import UserService
 from app.dependancys.user_depend import get_current_user, get_email_service, get_otp_service
-from app.schemas.user_schema import UserCreate, UserResponse, UserLogin, UserUpdate, ChangePasswordRequest, ChangeEmail
+from app.schemas.user_schema import UserCreate, UserResponse, UserLogin, UserUpdate, ChangePasswordRequest, ChangeEmail, VerifyRegister
 from app.dependancys.user_depend import get_user_service
 from app.core.config import setting
 from app.model.user_model import User
@@ -26,6 +26,21 @@ async def register(
     return {
         "message":"Otp is Send to Email address."
     }
+    
+@user_router.post('/verify-register')
+async def verify_register(
+    user: VerifyRegister,
+    otp_service: OtpService = Depends(get_otp_service),
+    user_service: UserService = Depends(get_user_service)
+):
+    user_data = await otp_service.verify_otp("registration",user.verify_email,user.otp)
+    new_user = UserCreate(
+        username=user_data.get("username"),
+        email=user_data.get("email"),
+        password=user_data.get("password")
+    )
+    await user_service.register_user(new_user)
+    return {"message": "Registration Sucessfuly please login to use the System."}
 
 @user_router.get('/me',response_model=UserResponse)
 async def me(
