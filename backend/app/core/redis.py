@@ -22,7 +22,7 @@ async def init_redis_pool()->None:
 async def redis_close():
     global redis_pool
     if redis_pool:
-        return redis_pool.disconnect()
+        return await redis_pool.disconnect()
     
 async def get_redis()->Redis:
     return Redis(connection_pool=redis_pool)
