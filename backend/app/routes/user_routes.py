@@ -15,13 +15,12 @@ async def register(
     user: UserCreate,
     background_task: BackgroundTasks,
     otp_service: OtpService = Depends(get_otp_service),
-    email_service: EmailService = Depends(get_email_service)
 )->dict:
     otp = await otp_service.otp_generate_save('registration',user.email,user.model_dump())
     background_task.add_task(
-        email_service.send_otp_email,
-        to_email=user.email,
-        otp=otp
+        EmailService.send_otp_email,
+        user.email,
+        otp
     )
     return {
         "message":"Otp is Send to Email address."
@@ -30,8 +29,9 @@ async def register(
 @user_router.post('/verify-register')
 async def verify_register(
     user: VerifyRegister,
+    background_task: BackgroundTasks,
     otp_service: OtpService = Depends(get_otp_service),
-    user_service: UserService = Depends(get_user_service)
+    user_service: UserService = Depends(get_user_service),
 ):
     user_data = await otp_service.verify_otp("registration",user.verify_email,user.otp)
     new_user = UserCreate(
@@ -40,6 +40,11 @@ async def verify_register(
         password=user_data.get("password")
     )
     await user_service.register_user(new_user)
+    background_task.add_task(
+        EmailService.send_register_success_email,
+        new_user.username,
+        new_user.email
+    )
     return {"message": "Registration Sucessfuly please login to use the System."}
 
 @user_router.get('/me',response_model=UserResponse)

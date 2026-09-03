@@ -25,7 +25,8 @@ class UserService:
         new_user = User(
             username=data.username,
             email=data.email,
-            hashed_password=password
+            hashed_password=password,
+            is_verified=True
         )
         return await self.user_repo.create(new_user)
     
